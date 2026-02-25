@@ -1,23 +1,26 @@
 ekf:
   time_step: 0.01  # 10 мс
-  state_size: 16
+  state_size: 15
   measurement_size: 4
   initial_state: 
     position:   [0.0, 0.0, 0.0]
     velocity:   [0.0, 0.0, 0.0]
     quaternion: [0.0, 0.0, 0.0, 0.0]
+    angle:      [0.0, 0.0, 0.0]
     bias_acc:   [0.0, 0.0, 0.0]
     bias_gyro:  [0.0, 0.0, 0.0]
   initial_covariance: 
     position:   [1.0, 1.0, 0.1]
     velocity:   [0.1, 0.1, 0.1]
     quaternion: [0.1, 0.1, 0.1, 0.1]
+    angle:      [0.1, 0.1, 0.1]
     bias_acc:   [0.01, 0.01, 0.01]
     bias_gyro:  [0.01, 0.01, 0.01]
   process_noise:
-    position: [0.000001, 0.000001, 0.000001]    # Шум позиции
+    position:   [0.000001, 0.000001, 0.000001]    # Шум позиции
     velocity: 0.001                             # Шум скорости
     quaternion: [0.005, 0.005, 0.005, 0.005]    # Шум кватернионов 
+    angle:      [0.005, 0.005, 0.005]    # Шум кватернионов 
     bias_acc: 0.05                              # Шум смещения акселерометра 
     bias_gyro: 0.001                            # Шум смещения гироскопа 
   measurement_noise:

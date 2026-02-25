@@ -16,6 +16,7 @@ type Config struct {
 			Position   []float64 `yaml:"position"`
 			Velocity   []float64 `yaml:"velocity"`
 			Quaternion []float64 `yaml:"quaternion"`
+			Angle      []float64 `yaml:"angle"`
 			Bias_acc   []float64 `yaml:"bias_acc"`
 			Bias_gyro  []float64 `yaml:"bias_gyro"`
 		} `yaml:"initial_state"`
@@ -23,6 +24,7 @@ type Config struct {
 			Position   []float64 `yaml:"position"`
 			Velocity   []float64 `yaml:"velocity"`
 			Quaternion []float64 `yaml:"quaternion"`
+			Angle      []float64 `yaml:"angle"`
 			Bias_acc   []float64 `yaml:"bias_acc"`
 			Bias_gyro  []float64 `yaml:"bias_gyro"`
 		} `yaml:"initial_covariance"`
@@ -30,6 +32,7 @@ type Config struct {
 			Position   []float64 `yaml:"position"`
 			Velocity   float64   `yaml:"velocity"`
 			Quaternion []float64 `yaml:"quaternion"`
+			Angle      []float64 `yaml:"angle"`
 			Bias_acc   float64   `yaml:"bias_acc"`
 			Bias_gyro  float64   `yaml:"bias_gyro"`
 		} `yaml:"process_noise"`
