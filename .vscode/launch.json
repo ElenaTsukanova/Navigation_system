@@ -1,0 +1,82 @@
+{
+    // Используйте IntelliSense, чтобы узнать о возможных атрибутах.
+    // Наведите указатель мыши, чтобы просмотреть описания существующих атрибутов.
+    // Для получения дополнительной информации посетите: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        
+        // Основная конфигурация для запуска приложения EKF Positioning.
+            // Выполняет сборку через preLaunchTask, затем запускает главную программу
+            // с включенным debug-уровнем логирования.
+        {
+            "name": "EKF Positioning: Run",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "program": "${workspaceFolder}/main.go",
+            "cwd": "${workspaceFolder}",
+            "args": [],
+            "env": {
+                "GO111MODULE": "on",
+                "LOG_LEVEL": "debug"
+            },
+            "console": "integratedTerminal",
+            "internalConsoleOptions": "neverOpen",
+            //"preLaunchTask": "go-build"
+        }
+//
+        
+        /*
+        // Запуск всех тестов в проекте с подробным выводом (-v).
+            // Полезно для отладки тестов с просмотром логов выполнения.
+        {
+            "name": "EKF Positioning: Debug Tests",
+            "type": "go",
+            "request": "launch",
+            "mode": "test",
+            "program": "${workspaceFolder}",
+            "args": [
+                "-v"
+            ],
+            "env": {}, //
+            "showLog": true//
+        },
+
+        // Запуск бенчмарков производительности.
+            // Измеряет время выполнения и использование памяти (-benchmem),
+            // каждый бенчмарк выполняется 5 секунд (-benchtime=5s).
+        {
+            "name": "EKF Positioning: Benchmark",
+            "type": "go",
+            "request": "launch",
+            "mode": "test",
+            "program": "${workspaceFolder}",
+            "args": [
+                "-bench",
+                "-benchmem",
+                "-benchtime=5s"
+            ],
+            "env": {},
+            "console": "integratedTerminal"
+        },
+        
+
+            // Юнит-тесты конкретно для модуля EKF.
+            // Тестирует основные функции фильтра: предсказание, коррекцию,
+            // работу с матрицами ковариации и т.д.
+        {
+            "name": "EKF Positioning: Unit Tests",
+            "type": "go",
+            "request": "launch",
+            "mode": "test",
+            "program": "${workspaceFolder}/internal/ekf",
+            "args": [
+                "-v"
+            ],
+            "env": {},
+            "console": "integratedTerminal"
+        }
+        */
+
+    ]
+}

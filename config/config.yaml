@@ -1,0 +1,40 @@
+ekf:
+  time_step: 0.01  # 10 мс
+  state_size: 16
+  measurement_size: 4
+  initial_state: 
+    position:   [0.0, 0.0, 0.0]
+    velocity:   [0.0, 0.0, 0.0]
+    quaternion: [0.0, 0.0, 0.0, 0.0]
+    bias_acc:   [0.0, 0.0, 0.0]
+    bias_gyro:  [0.0, 0.0, 0.0]
+  initial_covariance: 
+    position:   [1.0, 1.0, 0.1]
+    velocity:   [0.1, 0.1, 0.1]
+    quaternion: [0.1, 0.1, 0.1, 0.1]
+    bias_acc:   [0.01, 0.01, 0.01]
+    bias_gyro:  [0.01, 0.01, 0.01]
+  process_noise:
+    position: [0.000001, 0.000001, 0.000001]    # Шум позиции
+    velocity: 0.001                             # Шум скорости
+    quaternion: [0.005, 0.005, 0.005, 0.005]    # Шум кватернионов 
+    bias_acc: 0.05                              # Шум смещения акселерометра 
+    bias_gyro: 0.001                            # Шум смещения гироскопа 
+  measurement_noise:
+    position_gnss: [3.0, 3.0, 10.0]     # Шум позиции GNSS
+    speed: 0.05                         # Шум скорости спидометра
+sensors:
+  sync_threshold: "5ms"  # или 5000000 для наносекунд
+
+  accelerometer:
+    frequency: 10.0   # 100 Гц
+
+  gyroscope:
+    frequency: 10.0   # 100 Гц
+
+  gnss:
+    frequency: 1.0    # 1 Гц
+    sync_window: "50ms"  # окно синхронизации для GNSS
+    reference_latitude:
+    reference_longitude:
+    reference_altitude:

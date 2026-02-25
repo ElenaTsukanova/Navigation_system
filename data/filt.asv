@@ -1,0 +1,391 @@
+%close all;
+clear all;
+clc;
+
+
+%% Параметры акселерометра
+sample_time_acc = 0.1; % период дискретизации
+sample_freq = 10; % период дискретизации
+
+
+%% filter (butter)
+fc_b = 100;
+n = 4; %4
+
+
+%% end of name file
+end_name = '_f100Hz.csv';
+
+file = "acc_31_07.csv";
+file_read = readmatrix(file_name);
+        
+Ax = file_read(:,2)';
+Ay = file_read(:,3)';
+Az = file_read(:,4)';
+time = sample_time_acc * (0 : 1: length(file_read(Ax)))';
+
+%{
+for i = 1 : length(Ax)
+    Ax_ = Ax(i);
+    Ay_ = Ay(i);
+    Ax(i) = (Ax_ + Ay_)*sqrt(2)/2;
+    Ay(i) = (Ax_ - Ay_)*sqrt(2)/2;
+end
+%}
+
+%% filter (butter)
+fs_b = 10;
+plot_psd_on = 0
+  
+    if plot_psd_on
+        % filt atfer interpolation
+        % lowpass
+        fs_0 = sample_freq;
+        f_pass_0 = 0.25*sample_freq_acc;
+        f_stop_0 = 0.45*sample_freq_acc;
+        Ax_interpol_0 = lowpass(Ax_interpol_,f_pass_0,fs_0,'ImpulseResponse','fir','Steepness',0.9);
+        Ax_interpol_0 = point_interpol*Ax_interpol_0;
+        Ay_interpol_0 = lowpass(Ay_interpol_,f_pass_0,fs_0,'ImpulseResponse','fir','Steepness',0.9);
+        Ay_interpol_0 = point_interpol*Ay_interpol_0;
+        
+        
+        % filter designer
+        fs_1 = sample_freq*point_interpol;
+        f_pass_1 = 0.25*sample_freq_acc;
+        f_stop_1 = 0.45*sample_freq_acc;
+        d = designfilt('lowpassfir', ...        % Response type
+            'PassbandFrequency',f_pass_1, ...     % Frequency constraints
+            'StopbandFrequency',f_stop_1, ...
+            'PassbandRipple',0.5, ...          % Magnitude constraints
+            'StopbandAttenuation',50, ...
+            'SampleRate',fs_1);            % Sample rate
+        fvtool(d);
+        Ax_interpol_1 = conv(Ax_interpol_,d.Coefficients,'same');
+        Ax_interpol_1 = Ax_interpol_1*point_interpol;
+        Ay_interpol_1 = conv(Ay_interpol_,d.Coefficients,'same');
+        Ay_interpol_1 = Ay_interpol_1*point_interpol;
+    end
+       
+        %% filter (100Hz)
+        % butter filt
+        [b,a] = butter(n,fc_b/(fs_b/2));
+        
+        Ax_filt400 = filter(b,a,Ax_resample);
+        Ay_filt400 = filter(b,a,Ay_resample);
+            
+            
+        time_filt400 = time_resample;
+        
+        Ax_1 = filter(b,a,Ax_resample);
+        Ax_2 = filter(b,a,Ax_1(end:-1:1));
+        Ax_2 = Ax_2(end:-1:1);
+        
+        
+        Ax_filt400_1 = filter(b,a,Ax_resample);
+        Ax_filt400_1_shift = Ax_filt400_1(73:end);
+        time_filt400_1_shift = time_filt400(1:end-72);
+        
+        
+        %% smooth
+        Ax_smooth = movmean(Ax_filt400,point_smooth);
+        Ay_smooth = movmean(Ay_filt400,point_smooth);
+        time_smooth = time_filt400;
+        if side_on
+            left_smooth = movmean(left_filt400,point_smooth);
+            right_smooth = movmean(right_filt400,point_smooth);
+            
+            left_y_smooth = movmean(left_y_filt400,point_smooth);
+            right_y_smooth = movmean(right_y_filt400,point_smooth);
+            
+            left_z_smooth = movmean(left_z_filt400,point_smooth);
+            right_z_smooth = movmean(right_z_filt400,point_smooth);
+        end
+        
+        %% decimation to model
+        timer_decimation = time(1);
+        Ax_filt = [];
+        Ay_filt = [];
+        time_filt = [];
+        left_filt = [];
+        right_filt = [];
+        left_y_filt = [];
+        right_y_filt = [];
+        left_z_filt = [];
+        right_z_filt = [];
+        res = 0;
+        
+        for i = 1 : length(time_smooth)
+            time_now = time_smooth(i);
+
+            if ((roundn(timer_decimation - time_now,-3) < sample_time_acc*1e3) && (res < roundn(timer_decimation - time_now,-3)))
+                res = roundn(timer_decimation - time_now,-3);
+            end
+
+            if (roundn(timer_decimation - time_now,-3) < sample_time_acc*1e3)
+                %time_filt = [time_filt time_now];
+                Ax_filt = [Ax_filt Ax_smooth(i)];
+                Ay_filt = [Ay_filt Ay_smooth(i)];
+                timer_decimation = timer_decimation + sample_time_system*1e3;
+                
+                if side_on
+                    left_filt = [left_filt left_smooth(i)];
+                    right_filt = [right_filt right_smooth(i)];
+                    
+                    left_y_filt = [left_y_filt left_y_smooth(i)];
+                    right_y_filt = [right_y_filt right_y_smooth(i)];
+                    
+                    left_z_filt = [left_z_filt left_z_smooth(i)];
+                    right_z_filt = [right_z_filt right_z_smooth(i)];
+                end
+                
+            end
+            
+        end
+        
+        %{
+        Ax_filt = Ax_smooth(1:10000:end);
+        Ay_filt = Ay_smooth(1:10000:end);
+        left_filt = left_smooth(1:10000:end);
+        right_filt = right_smooth(1:10000:end);
+        left_y_filt = left_y_smooth(1:10000:end);
+        left_z_filt = left_z_smooth(1:10000:end);
+        right_y_filt = right_y_smooth(1:10000:end);
+        
+        
+        time_filt = time_filt400_1_shift(1:10000:end);
+        right_z_filt = right_z_smooth(1:10000:end);
+        %}
+        time_filt = time(1) : sample_time_system*1e3 : time(1) + sample_time_system*1e3*(length(Ax_filt)-1);
+        
+        Ares_filt = sqrt(Ax_filt.^2+Ay_filt.^2);
+        
+        
+        start_rewrite = 0;
+        if (rewrite_on == 1)
+            start_rewrite = 1;
+        end
+        for w = 1 : length(Ares_filt)
+            if ((Ares_filt(w)*9.81 > Limit_Ares) && (start_rewrite == 1))
+                start_rewrite = 0;
+            end
+            
+            if (start_rewrite == 1)
+                Ax_filt(w) = 0;
+                Ay_filt(w) = 0;
+            else
+                break
+            end
+        end
+        
+        % turn Ax и Ay
+        if contains(folder_name,'Front')
+            if (abs(max(Ax_filt)) > abs(min(Ax_filt)))
+                Ax_filt = -Ax_filt;
+            end
+            
+            if (abs(max(Ay_filt)) > abs(min(Ay_filt)))
+                Ay_filt = -Ay_filt;
+            end
+            
+        end
+        
+        
+        if contains(folder_name,'Rear')
+            if (abs(max(Ax_filt)) < abs(min(Ax_filt)))
+                Ax_filt = -Ax_filt;
+            end
+            
+            if (abs(max(Ay_filt)) < abs(min(Ay_filt)))
+                Ay_filt = -Ay_filt;
+            end
+            
+        end
+        
+        % turn_45
+        %{
+        if (contains(folder_name,'Side') | contains(folder_name,'Rear')...
+                | contains(folder_name,'Front')...
+                                                & (	contains(file_name,'M017')...
+                                                | contains(file_name,'M0180') | contains(file_name,'M0181')...
+                                                | contains(file_name1,'M01839') | contains(file_name1,'M01870')))
+                for i = 1 : length(Ax)
+                    Ax_filt(i) = (Ax_filt(i) + Ay_filt(i))*sqrt(2)/2;
+                    Ay_filt(i) = (Ax_filt(i) - Ay_filt(i))*sqrt(2)/2;
+                end
+                
+        end
+        %}
+                
+        
+        %% plot (ref/filt_acc)
+        coef_ = 9.81;
+        if plot_ref == 1
+            figure;
+            if side_on
+                N = 4;
+            else
+                N = 2;
+            end
+            
+            subplot(N,1,1);
+            name = strrep(file_name1,'_',' ');
+            title(name);
+            
+            hold on;
+            plot(time,Ax*coef_,'b');
+            plot(time_filt,Ax_filt*coef_,'r');
+            hold off;
+            
+            xlabel('time, ms');
+            ylabel('Ax, g');
+            legend({'Исходные','Фильтрованные'},'Location','southeast');
+            
+            subplot(N,1,2);
+            
+            hold on;
+            plot(time,Ay*coef_,'b');
+            plot(time_filt,Ay_filt*coef_,'r');
+            hold off;
+            
+            xlabel('time, ms');
+            ylabel('Ay, g');
+            legend({'Исходные','Фильтрованные'},'Location','southeast');
+            
+            if side_on
+                subplot(N,1,3);
+                
+                hold on;
+                plot(time,left*coef_,'b');
+                plot(time_filt,left_filt*coef_,'r');
+                hold off;
+                
+                xlabel('time, ms');
+                ylabel('left, g');
+                legend({'Исходные','Фильтрованные'},'Location','southeast');
+                
+                subplot(N,1,4);
+                
+                hold on;
+                plot(time,right*coef_,'b');
+                plot(time_filt,right_filt*coef_,'r');
+                hold off;
+                
+                xlabel('time, ms');
+                ylabel('right, g');
+                legend({'Исходные','Фильтрованные'},'Location','southeast');
+            end
+            
+        end
+        
+        if plot_side == 1
+            max_ = max([max(left_filt) max(right_filt) max(left_y_filt) max(right_y_filt) max(left_z_filt) max(right_z_filt)]);
+            min_ = min([min(left_filt) min(right_filt) min(left_y_filt) min(right_y_filt) min(left_z_filt) min(right_z_filt)]);
+            figure;
+            f_name = strrep(folder_name,'_',' ');
+            %name = strrep(file_name1,'_',' ');
+            name = file_name1;
+            
+            subplot(3,1,1);
+            title(strcat(f_name,' - ', name,' (LEFT)'),'Interpreter','none');
+            %title(strcat(name,' (LEFT)'),'Interpreter','none');
+            
+            hold on;
+                plot(time_filt,left_filt*coef_,'b');
+                
+                if strcmp(file_name1,'Side_R95_M01905') == 0
+                    plot(time_filt,left_y_filt*coef_,'r');
+                    plot(time_filt,left_z_filt*coef_,'g');
+                end
+            hold off;
+            
+            xlabel('time, ms');
+            ylabel('A, m/s^2');
+            if strcmp(file_name1,'Side_R95_M01905')
+                legend({'X'},'Location','southeast');
+            else
+                %legend({'X','Y','Z'},'Location','southeast');
+                legend({'X','Y','Z'},'Location','southwest');
+            end
+            
+            ylim([min_*coef_ max_*coef_]);
+            %ylim([-812 1522]);
+            %%
+            %xlim([30 80]);
+            
+            subplot(3,1,2);
+            %title(strcat(f_name,' - ', name,' (RIGHT)'),'Interpreter','none');
+            title(strcat(name,' (RIGHT)'),'Interpreter','none');
+            
+            hold on;
+            plot(time_filt,right_filt*coef_,'b');
+            plot(time_filt,right_y_filt*coef_,'r');
+            plot(time_filt,right_z_filt*coef_,'g');
+            hold off;
+            
+            xlabel('time, ms');
+            ylabel('A, m/s^2');
+            %legend({'X','Y','Z'},'Location','southeast');
+            legend({'X','Y','Z'},'Location','southwest');
+            
+            ylim([min_*coef_ max_*coef_]);
+            %ylim([-812 1522]);
+            %%
+            %xlim([30 80]);
+            
+            subplot(3,1,3);
+            %title(strcat(f_name,' - ', name,' (ACU)'),'Interpreter','none');
+            title(strcat(name,' (ACU)'),'Interpreter','none');
+            
+            hold on;
+            plot(time_filt,Ax_filt*coef_,'b');
+            plot(time_filt,Ay_filt*coef_,'r');
+            hold off;
+            
+            xlabel('time, ms');
+            ylabel('A, m/s^2');
+            %legend({'Ax','Ay'},'Location','southeast');
+            legend({'Ax','Ay','Z'},'Location','southwest');
+            %%
+            %xlim([30 80]);
+            
+            %ylim([min_*coef_ max_*coef_]);
+            %ylim([-360 140]);
+            
+            %%
+            if plot_Ares
+                figure;
+                hold on;
+                plot(time_filt,sqrt(Ax_filt.*Ax_filt*(coef_^2)+Ay_filt.*Ay_filt*(coef_^2)));
+                plot(time_filt,sqrt(left_filt.*left_filt*(coef_^2)+left_y_filt.*left_y_filt*(coef_^2)+left_z_filt.*left_z_filt*(coef_^2)));
+                plot(time_filt,sqrt(right_filt.*right_filt*(coef_^2)+right_y_filt.*right_y_filt*(coef_^2)+right_z_filt.*right_z_filt*(coef_^2)));
+                hold off;
+                xlabel('time, ms');
+                ylabel('A, m/s^2');
+                legend({'ACU','left','right'},'Location','southwest');
+                
+                
+                f_name = strrep(folder_name,'_',' ');
+                name = file_name1;
+                
+                title(strcat(folder_name,' (',name,')'),'Interpreter','none');
+                
+                xlim([-10 50]);
+            end
+            
+            
+        end
+        
+        if side_on
+            T_full = table(Ax_filt', Ay_filt',left_filt', right_filt',left_y_filt', right_y_filt',left_z_filt', right_z_filt',time_filt','VariableNames',{'Ax', 'Ay','left_x', 'right_x','left_y', 'right_y','left_z', 'right_z', 'time'});   
+        else
+            T_full = table(Ax_filt', Ay_filt',time_filt','VariableNames',{'Ax', 'Ay','time'});
+        end
+         
+        filename_to_write = strcat(file_name1,end_name);
+        writetable(T_full, filename_to_write, 'Delimiter', ';');
+    end
+    
+    
+end
+
+    %}
